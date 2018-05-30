@@ -8,31 +8,52 @@ object DnaTools {
     * Parse a DNA sequence from String as a sequence of nucleobase
     * @throws IllegalArgumentException if the sequence is not valid
     */
-  def parseDNA(str: String): DNA = ???
+  def parseDNA(str: String): DNA =
+    str.map(char => { Base(char)
+    })
 
   /**
     * Return the complementary sequences of a DNA sequence.
     *
     * Nucleobase A/T are complements of each other, as C and G.
     */
-  def complementary(dna: DNA): DNA = ???
+  def complementary(dna: DNA): DNA =
+    dna.map(base => base.getComplementary())
 
   /**
     * Count the number of each base in the DNA sequence
     */
-  def countBases(dna: DNA): Map[Base, Int] = ???
+  def countBases(dna: DNA): Map[Base, Int] =
+    dna.groupBy(base => base).map(base => (base._1,base._2.length))
 
   /**
     * Check if the `subsequence` is contained in the main DNA sequence.
     */
-  def contains(dna: DNA, subsequence: DNA): Boolean = ???
+  def contains(dna: DNA, subsequence: DNA): Boolean = {
 
 
+    def helper(subDNA: DNA, subSub: DNA): Boolean = (subDNA, subSub) match {
+      case (_, Nil) => true
+      case (xs,ys) => {
+        if (xs.head == ys.head) helper(xs.tail, ys.tail) else false
+      }
+    }
+
+    def helper2(dna: DNA, sub: DNA): Boolean = (dna, sub) match {
+      case (xs, ys) => if (helper(xs, ys)) true else helper2(xs.tail, ys)
+      case _ => {
+        println("other");
+        false
+      }
+    }
+
+    helper2(dna, subsequence)
+  }
   /**
     * Insert the `subsequence` at the `index` position of the DNA sequence (0-indexed)
     */
-  def insertSubsequence(dna: DNA, subsequence: DNA, index: Int): DNA = ???
-
+  def insertSubsequence(dna: DNA, subsequence: DNA, index: Int): DNA =
+  dna.take(index) ++ subsequence++dna.drop(index)
   /**
     * Process the Hamming distance of two DNA sequences.
     *
@@ -50,7 +71,16 @@ object DnaTools {
     *
     * @return the hamming distance of dna1 and dna2
     */
-  def hammingDistance(dna1: DNA, dna2: DNA): Long = ???
+  def hammingDistance(dna1: DNA, dna2: DNA): Long = {
+    def helper(dna1: DNA, dna2:DNA)(acc: Long): Long = (dna1,dna2) match {
+      case (Nil,_) =>  acc
+      case (xs,ys) => if(xs.head == ys.head) helper(xs.tail,ys.tail)(acc) else helper(xs.tail,ys.tail)(acc+1)
+    }
+    if(dna1.length< dna2.length) helper(dna1,dna2)(0)
+    else
+      helper(dna2,dna1)(0)
+  }
+
 
   /**
     * Search the differences between two DNA sequences.
@@ -58,7 +88,15 @@ object DnaTools {
     * Sames rules as the Hamming distance
     * @return The indices (0 based) of the differences between the two sequences
     */
-  def basesDifferences(dna1: DNA, dna2: DNA): Seq[Int] = ???
+  def basesDifferences(dna1: DNA, dna2: DNA): Seq[Int] = {
+    def helper(dna1: DNA, dna2:DNA)(acc: Seq[Int], index: Int): Seq[Int] = (dna1,dna2) match {
+      case (Nil,_) =>  acc
+      case (xs,ys) => if(xs.head == ys.head) helper(xs.tail,ys.tail)(acc,index +1) else helper(xs.tail,ys.tail)(acc++Seq(index),index+1)
+    }
+    if(dna1.length< dna2.length) helper(dna1,dna2)(Seq[Int](),0)
+    else
+      helper(dna2,dna1)(Seq[Int](),0)
+  }
 
   private val translationTableSource = """
      |FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
